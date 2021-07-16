@@ -15,9 +15,9 @@ namespace DurableFunctionsEpicFail
         public DurableEpicFail(ILogger<DurableEpicFail> logger) => this.logger = logger;
 
         [FunctionName(nameof(Start))]
-        public static async Task Start([TimerTrigger("0 0 * * * *", RunOnStartup = true)] TimerInfo timer, [DurableClient] IDurableOrchestrationClient client)
+        public static async Task Start([TimerTrigger("* * * * * *", RunOnStartup = true)] TimerInfo timer, [DurableClient] IDurableOrchestrationClient client)
         {
-            await Task.WhenAll(Enumerable.Range(0, 10000).Select(_ =>
+            await Task.WhenAll(Enumerable.Range(0, 1000).Select(_ =>
                 client.StartNewAsync(nameof(RunOrchestration))));
         }
 
