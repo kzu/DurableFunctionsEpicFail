@@ -24,13 +24,13 @@ namespace DurableFunctionsEpicFail
         [FunctionName(nameof(RunOrchestration))]
         public async Task RunOrchestration([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
-            logger.LogInformation("Starting Activity from {0}", context.InstanceId);
+            logger.LogInformation("{0} Started", context.InstanceId);
             await context.CallActivityAsync(nameof(RunActivity), context.InstanceId);
-            logger.LogInformation("Waiting for Begin from {0}", context.InstanceId);
+            logger.LogInformation("{0} Waiting for Begin", context.InstanceId);
             await context.WaitForExternalEvent("Begin");
-            logger.LogInformation("Waiting for End from {0}", context.InstanceId);
+            logger.LogInformation("{0} Waiting for End", context.InstanceId);
             await context.WaitForExternalEvent("End");
-            logger.LogWarning("Done from {0}", context.InstanceId);
+            logger.LogWarning("{0} Done", context.InstanceId);
         }
 
         [FunctionName(nameof(RunActivity))]
