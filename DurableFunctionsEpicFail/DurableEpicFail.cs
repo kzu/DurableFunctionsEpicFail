@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
@@ -18,8 +19,10 @@ namespace DurableFunctionsEpicFail
         {
             logger.LogWarning("Queuing 1k orchestrations");
 
-            for (var i = 0; i < 1000; i++)
-                await client.StartNewAsync(nameof(RunOrchestration));
+            await Enumerable.Range(0, 1000).ParallelForEachAsync(200, i =>
+            {
+                return client.StartNewAsync(nameof(RunOrchestration));
+            });
         }
 
         [FunctionName(nameof(RunOrchestration))]
