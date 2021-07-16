@@ -11,7 +11,8 @@ jobs:
     - name: 🤘 checkout
       uses: actions/checkout@v2
 
-    - run: dotnet build --configuration Release --output ./output
+    - name: 🙏 build
+      run: dotnet build --configuration Release --output ./output
 
     - name: 🚀 deploy
       uses: Azure/functions-action@v1
