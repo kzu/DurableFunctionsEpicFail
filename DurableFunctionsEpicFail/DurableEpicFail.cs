@@ -15,8 +15,10 @@ namespace DurableFunctionsEpicFail
         public DurableEpicFail(ILogger<DurableEpicFail> logger) => this.logger = logger;
 
         [FunctionName(nameof(Start))]
-        public static async Task Start([TimerTrigger("* * * * * *", RunOnStartup = true)] TimerInfo timer, [DurableClient] IDurableOrchestrationClient client)
+        public async Task Start([TimerTrigger("* * * * * *", RunOnStartup = true)] TimerInfo timer, [DurableClient] IDurableOrchestrationClient client)
         {
+            logger.LogWarning("Queuing 1k orchestrations");
+
             await Task.WhenAll(Enumerable.Range(0, 1000).Select(_ =>
                 client.StartNewAsync(nameof(RunOrchestration))));
         }
@@ -24,13 +26,13 @@ namespace DurableFunctionsEpicFail
         [FunctionName(nameof(RunOrchestration))]
         public async Task RunOrchestration([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
-            logger.LogInformation("{0} Started", context.InstanceId);
+            logger.LogDebug("{0} Started", context.InstanceId);
             await context.CallActivityAsync(nameof(RunActivity), context.InstanceId);
-            logger.LogInformation("{0} Waiting for Begin", context.InstanceId);
+            logger.LogDebug("{0} Waiting for Begin", context.InstanceId);
             await context.WaitForExternalEvent("Begin");
-            logger.LogInformation("{0} Waiting for End", context.InstanceId);
+            logger.LogDebug("{0} Waiting for End", context.InstanceId);
             await context.WaitForExternalEvent("End");
-            logger.LogWarning("{0} Done", context.InstanceId);
+            logger.LogInformation("{0} Done", context.InstanceId);
         }
 
         [FunctionName(nameof(RunActivity))]
