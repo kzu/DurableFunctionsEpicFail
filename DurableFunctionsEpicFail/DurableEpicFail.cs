@@ -7,12 +7,12 @@ using Microsoft.Extensions.Logging;
 
 namespace DurableFunctionsEpicFail
 {
-    public class DurableFail
+    public class DurableEpicFail
     {
         static Random random = new Random();
-        readonly ILogger<DurableFail> logger;
+        readonly ILogger<DurableEpicFail> logger;
 
-        public DurableFail(ILogger<DurableFail> logger) => this.logger = logger;
+        public DurableEpicFail(ILogger<DurableEpicFail> logger) => this.logger = logger;
 
         [FunctionName(nameof(Start))]
         public static async Task Start([TimerTrigger("0 0 * * * *", RunOnStartup = true)] TimerInfo timer, [DurableClient] IDurableOrchestrationClient client)
