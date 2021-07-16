@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
@@ -16,8 +17,8 @@ namespace DurableFunctionsEpicFail
         [FunctionName(nameof(Start))]
         public static async Task Start([TimerTrigger("0 0 * * * *", RunOnStartup = true)] TimerInfo timer, [DurableClient] IDurableOrchestrationClient client)
         {
-            for (int i = 0; i < 10000; i++)
-                await client.StartNewAsync(nameof(RunOrchestration));
+            await Task.WhenAll(Enumerable.Range(0, 10000).Select(_ =>
+                client.StartNewAsync(nameof(RunOrchestration))));
         }
 
         [FunctionName(nameof(RunOrchestration))]
