@@ -1,25 +1,33 @@
-﻿name: build-and-deploy
+﻿# Docs for the Azure Web Apps Deploy action: https://github.com/azure/functions-action
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: build-and-deploy
 
 on:
-  workflow_dispatch:
   push:
-    branches: [ main ]
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
     runs-on: windows-latest
     steps:
-    - name: 🤘 checkout
-      uses: actions/checkout@v2
+      - name: 🤘 checkout
+        uses: actions/checkout@v2
 
-    - name: 🙏 build
-      run: dotnet build --configuration Release --output ./output
+      - name: 🙏 build
+        run: dotnet build --configuration Release --output ./output
 
-    - name: 🚀 deploy
-      uses: Azure/functions-action@v1
-      with:
-        app-name: 'DurableFunctionsEpicFail'
-        slot-name: 'production'
-        package: './output'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_de1f23e6752e4065880178b59394607d }}
+      - name: 🔓 login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: 🚀 deploy
+        uses: Azure/functions-action@v1
+        with:
+          app-name: 'DurableFunctionsEpicFail'
+          slot-name: 'production'
+          package: './output'
   
