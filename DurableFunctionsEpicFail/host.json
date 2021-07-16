@@ -1,0 +1,28 @@
+{
+  "version": "2.0",
+  "functionTimeout": "00:10:00",
+  "logging": {
+    "applicationInsights": {
+      "samplingSettings": {
+        "isEnabled": true,
+        "excludedTypes": "Request"
+      },
+      "httpAutoCollectionOptions": {
+        "enableHttpTriggerExtendedInfoCollection": false
+      }
+    },
+    "logLevel": {
+      "default": "Information",
+      "Host": "Warning",
+      "Host.Results": "Warning",
+      "Host.Controllers.Host": "Warning",
+      "Microsoft": "Warning",
+      "Microsoft.Azure.WebJobs.Script.WebHost.Middleware.SystemTraceMiddleware": "Warning",
+      "Function": "Warning",
+      "Worker": "Warning",
+      "DurableFunctionsEpicFail": "Information",
+      "DurableTask.AzureStorage": "Error",
+      "DurableTask.Core": "Error"
+    }
+  }
+}
