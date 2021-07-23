@@ -52,7 +52,7 @@ namespace DurableFunctionsEpicFail
             await context.WaitForExternalEvent("Begin");
             logger.LogDebug("{0} Waiting for End", context.InstanceId);
             await context.WaitForExternalEvent("End");
-            logger.LogInformation("{0} Done", context.InstanceId);
+            logger.LogWarning("{0} Done", context.InstanceId);
         }
 
         [FunctionName(nameof(RunHttpActivity))]
