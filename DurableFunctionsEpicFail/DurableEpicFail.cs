@@ -1,8 +1,11 @@
 using System;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
+using Microsoft.Azure.EventGrid.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Azure.WebJobs.Extensions.EventGrid;
 using Microsoft.Extensions.Logging;
 
 namespace DurableFunctionsEpicFail
@@ -10,26 +13,41 @@ namespace DurableFunctionsEpicFail
     public class DurableEpicFail
     {
         static Random random = new Random();
+        static readonly HttpClient http = new HttpClient();
         readonly ILogger<DurableEpicFail> logger;
 
         public DurableEpicFail(ILogger<DurableEpicFail> logger) => this.logger = logger;
 
         [FunctionName(nameof(Start))]
-        public async Task Start([TimerTrigger("* * * * * *", RunOnStartup = true)] TimerInfo timer, [DurableClient] IDurableOrchestrationClient client)
+        public async Task Start(
+            [TimerTrigger("* * * * * *", RunOnStartup = true)] TimerInfo timer, 
+            [EventGrid(TopicEndpointUri = "EventGridUrl", TopicKeySetting = "EventGridKey")] IAsyncCollector<EventGridEvent> events)
         {
             logger.LogWarning("Queuing 1k orchestrations");
 
             await Enumerable.Range(0, 1000).ParallelForEachAsync(200, i =>
-            {
-                return client.StartNewAsync(nameof(RunOrchestration));
-            });
+                // Orchestrations are started via an event grid event
+                events.AddAsync(new EventGridEvent(
+                    Guid.NewGuid().ToString(), i.ToString(),
+                    "Foo", "Bar", DateTime.UtcNow, "1.0", "Durable")));
         }
+
+        [FunctionName(nameof(StartOrchestration))]
+        public Task StartOrchestration(
+            [EventGridTrigger] EventGridEvent e,
+            [DurableClient] IDurableOrchestrationClient client)
+            // Event grid handler starts the orchestration
+            => client.StartNewAsync(nameof(RunOrchestration));
 
         [FunctionName(nameof(RunOrchestration))]
         public async Task RunOrchestration([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
             logger.LogDebug("{0} Started", context.InstanceId);
-            await context.CallActivityAsync(nameof(RunActivity), context.InstanceId);
+            
+            // Runs HTTP GET and queues a message
+            await context.CallActivityAsync(nameof(RunHttpActivity), context.InstanceId);
+
+            // Events are triggered by the queue trigger.
             logger.LogDebug("{0} Waiting for Begin", context.InstanceId);
             await context.WaitForExternalEvent("Begin");
             logger.LogDebug("{0} Waiting for End", context.InstanceId);
@@ -37,9 +55,10 @@ namespace DurableFunctionsEpicFail
             logger.LogInformation("{0} Done", context.InstanceId);
         }
 
-        [FunctionName(nameof(RunActivity))]
+        [FunctionName(nameof(RunHttpActivity))]
         [return: Queue("Activity")]
-        public static string RunActivity([ActivityTrigger] IDurableActivityContext context) => context.GetInput<string>();
+        public static Task<string> RunHttpActivity([ActivityTrigger] IDurableActivityContext context) 
+            => http.GetStringAsync("https://docs.microsoft.com/");
 
         [FunctionName(nameof(DoWork))]
         public static async Task DoWork([QueueTrigger("Activity")] string instanceId, [DurableClient] IDurableOrchestrationClient client)
