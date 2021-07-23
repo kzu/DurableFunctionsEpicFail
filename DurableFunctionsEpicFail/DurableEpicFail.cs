@@ -25,13 +25,11 @@ namespace DurableFunctionsEpicFail
         {
             logger.LogWarning("Queuing 1k orchestrations");
 
-            await Enumerable.Range(0, 1000).ParallelForEachAsync(200, async i =>
+            await Enumerable.Range(0, 1000).ParallelForEachAsync(200, i =>
                 // Orchestrations are started via an event grid event
-                await events.AddAsync(new EventGridEvent(
+                events.AddAsync(new EventGridEvent(
                     Guid.NewGuid().ToString(), i.ToString(),
-                    "Foo", "Bar", DateTime.UtcNow, "1.0", "Durable")));
-
-            await events.FlushAsync();
+                    "Data", "EpicEvent", DateTime.UtcNow, "1.0", "Durable")));
         }
 
         [FunctionName(nameof(StartOrchestration))]
@@ -44,7 +42,7 @@ namespace DurableFunctionsEpicFail
         [FunctionName(nameof(RunOrchestration))]
         public async Task RunOrchestration([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
-            logger.LogDebug("{0} Started", context.InstanceId);
+            logger.LogInformation("{0} Started", context.InstanceId);
             
             // Runs HTTP GET and queues a message
             await context.CallActivityAsync(nameof(RunHttpActivity), context.InstanceId);
